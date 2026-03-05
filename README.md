@@ -18,12 +18,12 @@ L'utilisateur règle une période en millisecondes, démarre le timer et observe
 ┌─────────────────────────────────────────┐
 │          Semaine 3 - QTimer             │
 │                                         │
-│  Période (ms) : [ 1000 ]               │
+│      Période (ms) : [ 1000 ]            │
 │                                         │
-│           [ Démarrer ]                  │
+│            [ Démarrer ]                 │
 │                                         │
-│  Compteur :     42                      │
-│  Etat :         En cours...             │
+│     Compteur :     42                   │
+│     Etat :         En cours...          │
 │                                         │
 └─────────────────────────────────────────┘
 ```
@@ -134,7 +134,7 @@ Ouvrir `CMakeLists.txt` dans Qt Creator puis `Ctrl+R`.
 | S1 | Découverte Qt Creator, première fenêtre | ✅ Terminé |
 | S2 | IHM complète, signaux/slots | ✅ Terminé |
 | S3 | QTimer, acquisition périodique | ✅ Terminé |
-| S4 | GPIO, commande LED | ✅ Terminé |
+| S4 | GPIO, commande LED | ⏳ A venir |
 | S5 | Capteur I2C SHT20 | ⏳ A venir |
 | S6 | Communication TCP / Série | ⏳ A venir |
 | S7 | Structuration logicielle | ⏳ A venir |
@@ -142,4 +142,4 @@ Ouvrir `CMakeLists.txt` dans Qt Creator puis `Ctrl+R`.
 
 ---
 
-*BTS CIEL — 2024/2025*
+*BTS CIEL — 2025/2026*
