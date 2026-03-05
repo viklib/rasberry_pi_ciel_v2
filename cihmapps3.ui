@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CIhmAppS3</class>
+ <widget class="QMainWindow" name="timer">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>380</width><height>280</height></rect>
+  </property>
+  <property name="windowTitle">
+   <string>Application S3 - QTimer</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="laTitre">
+    <property name="geometry">
+     <rect><x>50</x><y>15</y><width>280</width><height>25</height></rect>
+    </property>
+    <property name="text">
+     <string>Semaine 3 - QTimer</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="laLabelPeriode">
+    <property name="geometry">
+     <rect><x>30</x><y>60</y><width>100</width><height>25</height></rect>
+    </property>
+    <property name="text">
+     <string>Periode (ms) :</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lePeriode">
+    <property name="geometry">
+     <rect><x>140</x><y>60</y><width>100</width><height>25</height></rect>
+    </property>
+    <property name="text">
+     <string>1000</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pbDemarrer">
+    <property name="geometry">
+     <rect><x>120</x><y>105</y><width>140</width><height>35</height></rect>
+    </property>
+    <property name="text">
+     <string>Demarrer</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="laLabelCompteur">
+    <property name="geometry">
+     <rect><x>30</x><y>165</y><width>100</width><height>25</height></rect>
+    </property>
+    <property name="text">
+     <string>Compteur :</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="laCompteur">
+    <property name="geometry">
+     <rect><x>140</x><y>165</y><width>100</width><height>25</height></rect>
+    </property>
+    <property name="text">
+     <string>0</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="laLabelEtat">
+    <property name="geometry">
+     <rect><x>30</x><y>205</y><width>100</width><height>25</height></rect>
+    </property>
+    <property name="text">
+     <string>Etat :</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="laEtat">
+    <property name="geometry">
+     <rect><x>140</x><y>205</y><width>180</width><height>25</height></rect>
+    </property>
+    <property name="text">
+     <string>Timer arrete</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect><x>0</x><y>0</y><width>380</width><height>22</height></rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
