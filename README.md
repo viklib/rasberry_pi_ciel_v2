@@ -19,8 +19,8 @@ Cinquième semaine de formation Qt. L'objectif est de lire la **température** e
 │  Temperature :      24.5 °C                 │
 │  Humidite    :      58.2 %                  │
 │                                             │
-│  Seuil (°C) :      [ 25  ]                 │
-│  Broche LED :      [ 22 ▼ ]  [ Activer ]   │
+│  Seuil (°C) :      [ 25  ]                  │
+│  Broche LED :      [ 22 ▼ ]  [ Activer ]    │
 │                                             │
 │       [ Demarrer acquisition ]              │
 │                                             │
