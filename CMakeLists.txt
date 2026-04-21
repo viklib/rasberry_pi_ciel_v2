@@ -29,7 +29,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
     )
 else()
-        add_executable(appS5_v3N
+        add_executable(appS5_v3
         ${PROJECT_SOURCES}
     )
 endif()
