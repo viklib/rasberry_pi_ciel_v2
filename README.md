@@ -1,5 +1,5 @@
-# Semaine 3 — QTimer et acquisition périodique
-
+# Semaine 3 — QTimer et acquisition périodique 🦝
+ 
 > Projet pédagogique | BTS CIEL | Qt / C++ / Raspberry Pi
 
 ---
@@ -142,4 +142,4 @@ Ouvrir `CMakeLists.txt` dans Qt Creator puis `Ctrl+R`.
 
 ---
 
-*BTS CIEL — 2025/2026*
+*BTS CIEL — 2025/2026* 🦝
