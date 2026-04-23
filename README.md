@@ -1,4 +1,4 @@
-# Semaine 6 — Communication TCP + Sauvegarde CSV
+# Semaine 6 — Communication TCP + Sauvegarde CSV 🦝
 
 > Projet pédagogique | BTS CIEL | Qt / C++ / Raspberry Pi
 
@@ -355,4 +355,4 @@ Durant cette semaine, l'IA **Claude** (Anthropic) a de nouveau été utilisée c
 
 ---
 
-*BTS CIEL — 2025/2026*
+*BTS CIEL — 2025/2026* 🦝
