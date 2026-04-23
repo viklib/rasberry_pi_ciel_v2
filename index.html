@@ -2,410 +2,1075 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Câblage Raspberry Pi — BTS CIEL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shield Pédagogique — BTS CIEL 🦝</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; margin: 0; padding: 20px; }
-  h1 { text-align: center; color: #e94560; margin-bottom: 4px; }
-  h2 { color: #0f3460; background: #e94560; padding: 6px 14px; border-radius: 6px; display: inline-block; font-size: 15px; }
-  .subtitle { text-align: center; color: #aaa; margin-bottom: 30px; font-size: 13px; }
+  :root {
+    --cream:    #f5f0e8;
+    --cream2:   #ede7d9;
+    --sage:     #7a9e87;
+    --sage-lt:  #a8c4b0;
+    --sage-dk:  #4d7a5e;
+    --rust:     #b5604a;
+    --rust-lt:  #d4896e;
+    --amber:    #c9903a;
+    --amber-lt: #e3b96a;
+    --slate:    #4a5568;
+    --slate-lt: #718096;
+    --ink:      #2d3748;
+    --pcb:      #3d5c3a;
+    --pcb-lt:   #5a7d56;
+    --pcb-trace:#8fbc8f;
+    --gold:     #d4a843;
+    --white:    #ffffff;
+    --modal-bg: rgba(45, 55, 72, 0.7);
+  }
 
-  .section { background: #16213e; border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 1px solid #0f3460; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ── GPIO BOARD ── */
-  .board-wrap { display: flex; justify-content: center; margin: 20px 0; }
-  .board { background: #2d5a27; border-radius: 10px; padding: 16px 20px; border: 3px solid #1a3a16; position: relative; }
-  .board-title { text-align: center; color: #a8d5a2; font-weight: bold; font-size: 13px; margin-bottom: 12px; letter-spacing: 1px; }
-  .gpio-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px; }
-  .pin-row { display: flex; align-items: center; gap: 4px; }
-  .pin-row.right { flex-direction: row-reverse; }
-  .pin { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #000; flex-shrink: 0; cursor: default; }
-  .pin-label { font-size: 10px; white-space: nowrap; }
-  .pin-label.left  { text-align: right; min-width: 90px; }
-  .pin-label.right { text-align: left;  min-width: 90px; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
 
-  /* Couleurs broches */
-  .p-3v3   { background: #ff6b6b; }
-  .p-5v    { background: #ff4444; }
-  .p-gnd   { background: #333; border-color: #666; }
-  .p-gpio  { background: #4ecdc4; }
-  .p-i2c   { background: #ffe66d; }
-  .p-used  { background: #ff9f43; border: 2px solid #fff; box-shadow: 0 0 6px #ff9f43; }
-  .p-led   { background: #ff6348; border: 2px solid #fff; box-shadow: 0 0 6px #ff6348; }
+  /* ── HEADER ── */
+  header {
+    background: var(--pcb);
+    color: var(--cream);
+    padding: 36px 40px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 40px,
+      rgba(143,188,143,0.06) 40px,
+      rgba(143,188,143,0.06) 41px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 40px,
+      rgba(143,188,143,0.06) 40px,
+      rgba(143,188,143,0.06) 41px
+    );
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    position: relative;
+    letter-spacing: 0.02em;
+  }
+  header p {
+    font-size: 0.9rem;
+    color: var(--pcb-trace);
+    margin-top: 6px;
+    position: relative;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+  }
+  .raccoon { font-size: 1.1rem; }
 
-  /* Légende couleurs */
-  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0; justify-content: center; }
-  .leg-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
-  .leg-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid #555; }
+  /* ── LAYOUT ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
 
-  /* ── TABLEAUX CÂBLAGE ── */
-  .cable-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
-  .cable-table th { background: #0f3460; color: #fff; padding: 8px 12px; text-align: left; }
-  .cable-table td { padding: 7px 12px; border-bottom: 1px solid #0f3460; }
-  .cable-table tr:nth-child(even) td { background: #1e2d4a; }
-  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-  .tag-r { background: #ff6b6b22; color: #ff6b6b; border: 1px solid #ff6b6b; }
-  .tag-y { background: #ffe66d22; color: #ffe66d; border: 1px solid #ffe66d; }
-  .tag-o { background: #ff9f4322; color: #ff9f43; border: 1px solid #ff9f43; }
-  .tag-g { background: #4ecdc422; color: #4ecdc4; border: 1px solid #4ecdc4; }
-  .tag-b { background: #74b9ff22; color: #74b9ff; border: 1px solid #74b9ff; }
-  .tag-w { background: #ffffff22; color: #fff;     border: 1px solid #aaa; }
+  /* ── INTRO ── */
+  .intro {
+    background: var(--cream2);
+    border-left: 4px solid var(--sage);
+    border-radius: 0 10px 10px 0;
+    padding: 18px 22px;
+    margin: 32px 0 10px;
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: var(--slate);
+  }
+  .intro strong { color: var(--sage-dk); }
 
-  /* ── SCHEMA ASCII COMPOSANTS ── */
-  .schema-box { background: #0d1b2a; border-radius: 8px; padding: 16px; margin-top: 14px; font-family: monospace; font-size: 13px; line-height: 1.8; border: 1px solid #0f3460; }
-  .hl-gpio  { color: #ff9f43; font-weight: bold; }
-  .hl-gnd   { color: #aaa; }
-  .hl-vcc   { color: #ff6b6b; }
-  .hl-sda   { color: #ffe66d; }
-  .hl-scl   { color: #4ecdc4; }
-  .hl-led   { color: #ff6348; }
-  .hl-res   { color: #a29bfe; }
+  /* ── SECTION TITLES ── */
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    color: var(--pcb);
+    margin: 36px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--sage-lt);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title span { font-size: 1.1rem; }
 
-  /* ── RÉSISTANCE EXPLICATION ── */
-  .info-box { background: #0f3460; border-left: 4px solid #e94560; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-top: 14px; font-size: 13px; line-height: 1.7; }
-  .info-box b { color: #ffe66d; }
-  .formula { background: #1a1a2e; border-radius: 6px; padding: 8px 14px; margin: 8px 0; font-family: monospace; font-size: 13px; color: #a29bfe; }
+  /* ── PCB BOARD ── */
+  .pcb-wrapper {
+    background: var(--pcb);
+    border-radius: 16px;
+    padding: 32px;
+    margin: 20px 0;
+    position: relative;
+    box-shadow: 0 8px 32px rgba(45,55,72,0.15);
+  }
+  .pcb-wrapper::before {
+    content: '';
+    position: absolute; inset: 0; border-radius: 16px;
+    background: repeating-linear-gradient(
+      90deg, transparent, transparent 30px,
+      rgba(143,188,143,0.04) 30px, rgba(143,188,143,0.04) 31px
+    ),
+    repeating-linear-gradient(
+      0deg, transparent, transparent 30px,
+      rgba(143,188,143,0.04) 30px, rgba(143,188,143,0.04) 31px
+    );
+    pointer-events: none;
+  }
+  .pcb-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--pcb-trace);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 20px;
+    opacity: 0.7;
+  }
 
-  .semaine-badge { display: inline-block; background: #e94560; color: #fff; border-radius: 20px; padding: 3px 12px; font-size: 12px; font-weight: bold; margin-left: 8px; vertical-align: middle; }
+  /* ── COMPOSANT GRID ── */
+  .comp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── COMPOSANT CARD ── */
+  .comp-card {
+    background: var(--pcb-lt);
+    border: 1.5px solid rgba(143,188,143,0.25);
+    border-radius: 12px;
+    padding: 16px 14px;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .comp-card::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .comp-card:hover {
+    border-color: var(--sage-lt);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  }
+  .comp-card:hover::after { opacity: 1; }
+
+  .comp-ref {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--pcb-trace);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+    opacity: 0.8;
+  }
+  .comp-name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--cream);
+    margin-bottom: 4px;
+  }
+  .comp-desc {
+    font-size: 0.78rem;
+    color: var(--sage-lt);
+    line-height: 1.4;
+  }
+  .comp-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.68rem;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+  .badge-i2c   { background: rgba(201,144,58,0.25); color: var(--amber-lt); border: 1px solid var(--amber); }
+  .badge-spi   { background: rgba(181,96,74,0.25);  color: var(--rust-lt);  border: 1px solid var(--rust); }
+  .badge-uart  { background: rgba(122,158,135,0.25);color: var(--sage-lt);  border: 1px solid var(--sage); }
+  .badge-gpio  { background: rgba(74,85,104,0.25);  color: #a0aec0;         border: 1px solid #718096; }
+  .badge-power { background: rgba(212,168,67,0.2);  color: var(--gold);     border: 1px solid var(--gold); }
+  .badge-hint {
+    position: absolute; top: 10px; right: 10px;
+    font-size: 0.65rem; color: var(--sage-lt); opacity: 0.6;
+  }
+  .semaine-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--sage);
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+  .semaine-txt {
+    font-size: 0.7rem;
+    color: var(--sage-lt);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── NAPPE SCHEMA ── */
+  .nappe-section {
+    background: var(--cream2);
+    border-radius: 14px;
+    padding: 28px;
+    margin: 20px 0;
+  }
+  .nappe-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
+    align-items: center;
+    margin-top: 16px;
+  }
+  .pin-col { display: flex; flex-direction: column; gap: 6px; }
+  .pin-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    transition: background 0.15s;
+    cursor: default;
+  }
+  .pin-row:hover { background: rgba(122,158,135,0.12); }
+  .pin-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--slate-lt);
+    min-width: 28px;
+    text-align: right;
+  }
+  .pin-name {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--ink);
+    min-width: 80px;
+  }
+  .pin-wire {
+    display: flex; align-items: center; gap: 0;
+    flex: 1;
+  }
+  .wire-line {
+    height: 2px;
+    flex: 1;
+    border-radius: 1px;
+  }
+  .wire-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .wire-i2c   { background: var(--amber); }
+  .wire-spi   { background: var(--rust); }
+  .wire-uart  { background: var(--sage); }
+  .wire-gpio  { background: #718096; }
+  .wire-power { background: var(--gold); }
+  .wire-gnd   { background: #4a5568; }
+
+  .nappe-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 8px;
+    background: var(--pcb);
+    border-radius: 8px;
+    border: 2px solid var(--pcb-trace);
+  }
+  .nappe-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--pcb-trace);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+  }
+
+  .shield-dest {
+    font-size: 0.82rem;
+    color: var(--slate);
+    text-align: left;
+    min-width: 100px;
+  }
+
+  /* ── LÉGENDE ── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 16px 0 0;
+  }
+  .leg-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.8rem; color: var(--slate);
+  }
+  .leg-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── VÉRIFICATION TABLE ── */
+  .verif-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin: 16px 0;
+  }
+  .verif-card {
+    background: var(--white);
+    border: 1.5px solid var(--cream2);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .verif-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+  .verif-title {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .verif-desc {
+    font-size: 0.8rem;
+    color: var(--slate-lt);
+    line-height: 1.5;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: var(--modal-bg);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    padding: 20px;
+  }
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .modal {
+    background: var(--cream);
+    border-radius: 18px;
+    padding: 32px;
+    max-width: 520px;
+    width: 100%;
+    position: relative;
+    transform: translateY(20px) scale(0.97);
+    transition: transform 0.25s ease;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal-overlay.active .modal {
+    transform: translateY(0) scale(1);
+  }
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    background: var(--cream2);
+    border: none; border-radius: 50%;
+    width: 32px; height: 32px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--slate);
+    transition: background 0.15s;
+  }
+  .modal-close:hover { background: var(--sage-lt); color: var(--white); }
+
+  .modal-ref {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--sage-dk);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+  }
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .modal-proto { margin-bottom: 16px; }
+  .modal-body {
+    font-size: 0.88rem;
+    color: var(--slate);
+    line-height: 1.75;
+    margin-bottom: 16px;
+  }
+  .modal-body p { margin-bottom: 10px; }
+  .modal-body strong { color: var(--ink); }
+
+  .modal-specs {
+    background: var(--cream2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .modal-spec-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(122,158,135,0.2);
+    font-size: 0.82rem;
+  }
+  .modal-spec-row:last-child { border-bottom: none; }
+  .spec-key { color: var(--slate-lt); }
+  .spec-val {
+    font-family: 'DM Mono', monospace;
+    color: var(--ink);
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .modal-cmd {
+    background: var(--ink);
+    color: var(--pcb-trace);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    margin-top: 8px;
+  }
+  .modal-cmd .cmd-comment { color: #718096; }
+  .modal-semaine {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(122,158,135,0.15);
+    border: 1px solid var(--sage-lt);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.78rem;
+    color: var(--sage-dk);
+    font-family: 'DM Mono', monospace;
+    margin-top: 12px;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 48px;
+    font-size: 0.8rem;
+    color: var(--slate-lt);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 600px) {
+    .comp-grid { grid-template-columns: 1fr 1fr; }
+    .nappe-grid { grid-template-columns: 1fr; }
+    .nappe-center { display: none; }
+  }
 </style>
 </head>
 <body>
 
-<h1>📍 Guide de câblage — Raspberry Pi</h1>
-<p class="subtitle">BTS CIEL · Qt / C++ · Années scolaires 2025/2026</p>
+<header>
+  <div class="container">
+    <h1>Shield Pédagogique <span class="raccoon">🦝</span></h1>
+    <p>BTS CIEL · Qt / C++ · Raspberry Pi · Année 2025/2026</p>
+  </div>
+</header>
 
-<!-- ══════════════════════════════════════════════════════ -->
-<!--                  BROCHAGE GPIO                        -->
-<!-- ══════════════════════════════════════════════════════ -->
-<div class="section">
-  <h2>🔌 Brochage GPIO — Raspberry Pi 3</h2>
-  <p style="font-size:13px;color:#aaa;margin:8px 0 4px">Connecteur 40 broches. Les broches entourées sont utilisées dans ce projet.</p>
+<div class="container">
 
-  <div class="legend">
-    <div class="leg-item"><div class="leg-dot" style="background:#ff6b6b"></div> 3.3V</div>
-    <div class="leg-item"><div class="leg-dot" style="background:#ff4444"></div> 5V</div>
-    <div class="leg-item"><div class="leg-dot" style="background:#333;border-color:#666"></div> GND</div>
-    <div class="leg-item"><div class="leg-dot" style="background:#4ecdc4"></div> GPIO dispo</div>
-    <div class="leg-item"><div class="leg-dot" style="background:#ffe66d"></div> I2C (SDA/SCL)</div>
-    <div class="leg-item"><div class="leg-dot" style="background:#ff9f43;border:2px solid #fff"></div> GPIO22 — LED (S4/S5/S6)</div>
-    <div class="leg-item"><div class="leg-dot" style="background:#ff6348;border:2px solid #fff"></div> I2C utilisé (S5/S6)</div>
+  <div class="intro">
+    Ce shield est une <strong>carte PCB conçue et soudée en cours</strong>. Elle se branche directement sur le connecteur GPIO 40 broches de la Raspberry Pi via une nappe 26 fils. Elle regroupe plusieurs composants de communication sur une seule carte : capteur I2C, capteur SPI, liaison RS232, afficheur LCD et GPIO. <br>
+    <strong>Cliquer sur un composant</strong> pour afficher son fonctionnement détaillé.
   </div>
 
-  <div class="board-wrap">
-    <div class="board">
-      <div class="board-title">RASPBERRY PI 3 — GPIO 40 BROCHES</div>
-      <div style="display:flex;gap:6px;align-items:flex-start">
+  <!-- ══ COMPOSANTS ══ -->
+  <h2 class="section-title"><span>🔩</span> Composants du shield</h2>
 
-        <!-- Colonne GAUCHE (broches impaires 1,3,5...) -->
-        <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
-          <div class="pin-row"><span class="pin-label left" style="color:#ff6b6b">3.3V</span><div class="pin p-3v3" title="Broche 1 — 3.3V"></div></div>
-          <div class="pin-row"><span class="pin-label left" style="color:#ffe66d"><b>SDA — I2C</b></span><div class="pin p-led" title="Broche 3 — GPIO2/SDA ← SHT20"></div></div>
-          <div class="pin-row"><span class="pin-label left" style="color:#ffe66d"><b>SCL — I2C</b></span><div class="pin p-led" title="Broche 5 — GPIO3/SCL ← SHT20"></div></div>
-          <div class="pin-row"><span class="pin-label left">GPIO4</span><div class="pin p-gpio" title="Broche 7 — GPIO4"></div></div>
-          <div class="pin-row"><span class="pin-label left" style="color:#aaa">GND</span><div class="pin p-gnd" title="Broche 9 — GND ← LED cathode"></div></div>
-          <div class="pin-row"><span class="pin-label left">GPIO17</span><div class="pin p-gpio" title="Broche 11 — GPIO17"></div></div>
-          <div class="pin-row"><span class="pin-label left">GPIO27</span><div class="pin p-gpio" title="Broche 13 — GPIO27"></div></div>
-          <div class="pin-row"><span class="pin-label left" style="color:#ff9f43"><b>GPIO22 ← LED</b></span><div class="pin p-used" title="Broche 15 — GPIO22 ← LED"></div></div>
-          <div class="pin-row"><span class="pin-label left" style="color:#ff6b6b">3.3V</span><div class="pin p-3v3" title="Broche 17 — 3.3V ← SHT20 VCC"></div></div>
-          <div class="pin-row"><span class="pin-label left">GPIO10</span><div class="pin p-gpio" title="Broche 19"></div></div>
-          <div class="pin-row"><span class="pin-label left">GPIO9</span><div class="pin p-gpio" title="Broche 21"></div></div>
-          <div class="pin-row"><span class="pin-label left">GPIO11</span><div class="pin p-gpio" title="Broche 23"></div></div>
-          <div class="pin-row"><span class="pin-label left" style="color:#aaa">GND</span><div class="pin p-gnd" title="Broche 25 — GND"></div></div>
-          <div class="pin-row"><span class="pin-label left">GPIO8</span><div class="pin p-gpio" title="Broche 26"></div></div>
-          <div class="pin-row"><span class="pin-label left">ID_SD</span><div class="pin p-gpio" title="Broche 27"></div></div>
-          <div class="pin-row"><span class="pin-label left">GPIO5</span><div class="pin p-gpio" title="Broche 29"></div></div>
-          <div class="pin-row"><span class="pin-label left" style="color:#aaa">GND</span><div class="pin p-gnd" title="Broche 31 — GND"></div></div>
-          <div class="pin-row"><span class="pin-label left">GPIO13</span><div class="pin p-gpio" title="Broche 33"></div></div>
-          <div class="pin-row"><span class="pin-label left">GPIO19</span><div class="pin p-gpio" title="Broche 35"></div></div>
-          <div class="pin-row"><span class="pin-label left">GPIO26</span><div class="pin p-gpio" title="Broche 37"></div></div>
-          <div class="pin-row"><span class="pin-label left" style="color:#aaa">GND</span><div class="pin p-gnd" title="Broche 39 — GND"></div></div>
-        </div>
+  <div class="pcb-wrapper">
+    <div class="pcb-label">Shield PCB — vue composants — cliquer pour détails</div>
+    <div class="comp-grid">
 
-        <!-- Numéros broches -->
-        <div style="display:flex;flex-direction:column;gap:3px;font-size:10px;color:#666;text-align:center">
-          <div style="display:flex;gap:2px">
-            <span style="width:18px;text-align:right">1</span>
-            <span style="width:18px">2</span>
+      <div class="comp-card" onclick="openModal('sht20')">
+        <span class="badge-hint">cliquer →</span>
+        <div class="comp-ref">U1 · CMS</div>
+        <div class="comp-name">SHT20</div>
+        <div class="comp-desc">Capteur température & humidité</div>
+        <div><span class="comp-badge badge-i2c">I2C · 0x40</span></div>
+        <div class="semaine-txt"><span class="semaine-dot"></span>S5 · S6</div>
+      </div>
+
+      <div class="comp-card" onclick="openModal('tc72')">
+        <span class="badge-hint">cliquer →</span>
+        <div class="comp-ref">U2 · CMS</div>
+        <div class="comp-name">TC72</div>
+        <div class="comp-desc">Capteur température secondaire</div>
+        <div><span class="comp-badge badge-spi">SPI · MODE 1</span></div>
+        <div class="semaine-txt"><span class="semaine-dot" style="background:#718096"></span>À venir</div>
+      </div>
+
+      <div class="comp-card" onclick="openModal('max232')">
+        <span class="badge-hint">cliquer →</span>
+        <div class="comp-ref">U3 · Traversant</div>
+        <div class="comp-name">MAX232</div>
+        <div class="comp-desc">Convertisseur UART → RS232</div>
+        <div><span class="comp-badge badge-uart">UART → RS232</span></div>
+        <div class="semaine-txt"><span class="semaine-dot"></span>S6</div>
+      </div>
+
+      <div class="comp-card" onclick="openModal('db9')">
+        <span class="badge-hint">cliquer →</span>
+        <div class="comp-ref">J3 · Connecteur</div>
+        <div class="comp-name">Port DB9</div>
+        <div class="comp-desc">Connecteur série RS232</div>
+        <div><span class="comp-badge badge-uart">RS232</span></div>
+        <div class="semaine-txt"><span class="semaine-dot"></span>S6</div>
+      </div>
+
+      <div class="comp-card" onclick="openModal('lcd')">
+        <span class="badge-hint">cliquer →</span>
+        <div class="comp-ref">J4 · Grove</div>
+        <div class="comp-name">Afficheur LCD</div>
+        <div class="comp-desc">Ecran I2C connecté via câble grove 5cm</div>
+        <div><span class="comp-badge badge-i2c">I2C · Grove</span></div>
+        <div class="semaine-txt"><span class="semaine-dot" style="background:#718096"></span>Optionnel</div>
+      </div>
+
+      <div class="comp-card" onclick="openModal('j1')">
+        <span class="badge-hint">cliquer →</span>
+        <div class="comp-ref">J1 · Nappe</div>
+        <div class="comp-name">Connecteur GPIO</div>
+        <div class="comp-desc">Nappe 26 fils vers Raspberry Pi</div>
+        <div><span class="comp-badge badge-gpio">GPIO · 26 broches</span></div>
+        <div class="semaine-txt"><span class="semaine-dot"></span>S4+</div>
+      </div>
+
+      <div class="comp-card" onclick="openModal('sw1')">
+        <span class="badge-hint">cliquer →</span>
+        <div class="comp-ref">SW1</div>
+        <div class="comp-name">Bouton SW1</div>
+        <div class="comp-desc">Bouton poussoir entrée numérique</div>
+        <div><span class="comp-badge badge-gpio">GPIO Input</span></div>
+        <div class="semaine-txt"><span class="semaine-dot" style="background:#718096"></span>Optionnel</div>
+      </div>
+
+      <div class="comp-card" onclick="openModal('leds')">
+        <span class="badge-hint">cliquer →</span>
+        <div class="comp-ref">D1 · D2</div>
+        <div class="comp-name">LEDs</div>
+        <div class="comp-desc">D1 commandée · D2 témoin 3.3V</div>
+        <div><span class="comp-badge badge-gpio">GPIO22</span> <span class="comp-badge badge-power">3.3V</span></div>
+        <div class="semaine-txt"><span class="semaine-dot"></span>S4+</div>
+      </div>
+
+      <div class="comp-card" onclick="openModal('fu1')">
+        <span class="badge-hint">cliquer →</span>
+        <div class="comp-ref">FU1</div>
+        <div class="comp-name">Fusible</div>
+        <div class="comp-desc">Protection alimentation de la carte</div>
+        <div><span class="comp-badge badge-power">Protection</span></div>
+        <div class="semaine-txt"><span class="semaine-dot"></span>Toujours</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ LÉGENDE PROTOCOLES ══ -->
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:var(--amber)"></div> I2C</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--rust)"></div> SPI</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--sage)"></div> UART / RS232</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#718096"></div> GPIO</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--gold)"></div> Alimentation</div>
+  </div>
+
+  <!-- ══ CONNEXION NAPPE ══ -->
+  <h2 class="section-title"><span>🔌</span> Connexion nappe — Raspberry Pi → Shield</h2>
+
+  <div class="nappe-section">
+    <p style="font-size:0.85rem;color:var(--slate);margin-bottom:6px">
+      ⚠️ <strong>Le sens de la nappe est important :</strong> le fil rouge doit être côté broche 1 (3.3V) de la Raspberry, marquée d'un carré sur le PCB.
+    </p>
+
+    <div class="nappe-grid">
+      <!-- Colonne gauche : Raspberry Pi -->
+      <div class="pin-col">
+        <div style="font-size:0.75rem;font-weight:500;color:var(--slate-lt);margin-bottom:4px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.08em">Raspberry Pi</div>
+
+        <div class="pin-row">
+          <span class="pin-num">1</span>
+          <span class="pin-name" style="color:var(--amber)">3.3V</span>
+          <div class="pin-wire">
+            <div class="wire-line wire-power" style="height:2px;flex:1"></div>
+            <div class="wire-dot wire-power"></div>
           </div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">3</span><span style="width:18px">4</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">5</span><span style="width:18px">6</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">7</span><span style="width:18px">8</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">9</span><span style="width:18px">10</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">11</span><span style="width:18px">12</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">13</span><span style="width:18px">14</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right;color:#ff9f43"><b>15</b></span><span style="width:18px">16</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">17</span><span style="width:18px">18</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">19</span><span style="width:18px">20</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">21</span><span style="width:18px">22</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">23</span><span style="width:18px">24</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">25</span><span style="width:18px">26</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">27</span><span style="width:18px">28</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">29</span><span style="width:18px">30</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">31</span><span style="width:18px">32</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">33</span><span style="width:18px">34</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">35</span><span style="width:18px">36</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">37</span><span style="width:18px">38</span></div>
-          <div style="display:flex;gap:2px"><span style="width:18px;text-align:right">39</span><span style="width:18px">40</span></div>
         </div>
-
-        <!-- Colonne DROITE (broches paires 2,4,6...) -->
-        <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">
-          <div class="pin-row"><div class="pin p-5v" title="Broche 2 — 5V"></div><span class="pin-label right" style="color:#ff4444">5V</span></div>
-          <div class="pin-row"><div class="pin p-5v" title="Broche 4 — 5V"></div><span class="pin-label right" style="color:#ff4444">5V</span></div>
-          <div class="pin-row"><div class="pin p-gnd" title="Broche 6 — GND"></div><span class="pin-label right" style="color:#aaa">GND</span></div>
-          <div class="pin-row"><div class="pin p-gpio" title="Broche 8 — GPIO14"></div><span class="pin-label right">GPIO14</span></div>
-          <div class="pin-row"><div class="pin p-gpio" title="Broche 10 — GPIO15"></div><span class="pin-label right">GPIO15</span></div>
-          <div class="pin-row"><div class="pin p-gpio" title="Broche 12 — GPIO18"></div><span class="pin-label right">GPIO18</span></div>
-          <div class="pin-row"><div class="pin p-gnd" title="Broche 14 — GND"></div><span class="pin-label right" style="color:#aaa">GND</span></div>
-          <div class="pin-row"><div class="pin p-gpio" title="Broche 16 — GPIO23"></div><span class="pin-label right">GPIO23</span></div>
-          <div class="pin-row"><div class="pin p-gpio" title="Broche 18 — GPIO24"></div><span class="pin-label right">GPIO24</span></div>
-          <div class="pin-row"><div class="pin p-gnd" title="Broche 20 — GND"></div><span class="pin-label right" style="color:#aaa">GND</span></div>
-          <div class="pin-row"><div class="pin p-gpio" title="Broche 22 — GPIO25"></div><span class="pin-label right">GPIO25</span></div>
-          <div class="pin-row"><div class="pin p-gpio" title="Broche 24 — GPIO8"></div><span class="pin-label right">GPIO8</span></div>
-          <div class="pin-row"><div class="pin p-gpio" title="Broche 26 — GPIO7"></div><span class="pin-label right">GPIO7</span></div>
-          <div class="pin-row"><div class="pin p-gpio" title="Broche 28 — ID_SC"></div><span class="pin-label right">ID_SC</span></div>
-          <div class="pin-row"><div class="pin p-gnd" title="Broche 30 — GND"></div><span class="pin-label right" style="color:#aaa">GND</span></div>
-          <div class="pin-row"><div class="pin p-gpio" title="Broche 32 — GPIO12"></div><span class="pin-label right">GPIO12</span></div>
-          <div class="pin-row"><div class="pin p-gnd" title="Broche 34 — GND"></div><span class="pin-label right" style="color:#aaa">GND</span></div>
-          <div class="pin-row"><div class="pin p-gpio" title="Broche 36 — GPIO16"></div><span class="pin-label right">GPIO16</span></div>
-          <div class="pin-row"><div class="pin p-gpio" title="Broche 38 — GPIO20"></div><span class="pin-label right">GPIO20</span></div>
-          <div class="pin-row"><div class="pin p-gpio" title="Broche 40 — GPIO21"></div><span class="pin-label right">GPIO21</span></div>
+        <div class="pin-row">
+          <span class="pin-num">3</span>
+          <span class="pin-name" style="color:var(--amber)">GPIO2/SDA</span>
+          <div class="pin-wire">
+            <div class="wire-line wire-i2c" style="height:2px;flex:1"></div>
+            <div class="wire-dot wire-i2c"></div>
+          </div>
         </div>
+        <div class="pin-row">
+          <span class="pin-num">5</span>
+          <span class="pin-name" style="color:var(--amber)">GPIO3/SCL</span>
+          <div class="pin-wire">
+            <div class="wire-line wire-i2c" style="height:2px;flex:1"></div>
+            <div class="wire-dot wire-i2c"></div>
+          </div>
+        </div>
+        <div class="pin-row">
+          <span class="pin-num">6</span>
+          <span class="pin-name" style="color:var(--slate-lt)">GND</span>
+          <div class="pin-wire">
+            <div class="wire-line wire-gnd" style="height:2px;flex:1"></div>
+            <div class="wire-dot wire-gnd"></div>
+          </div>
+        </div>
+        <div class="pin-row">
+          <span class="pin-num">8</span>
+          <span class="pin-name" style="color:var(--sage)">TX (UART)</span>
+          <div class="pin-wire">
+            <div class="wire-line wire-uart" style="height:2px;flex:1"></div>
+            <div class="wire-dot wire-uart"></div>
+          </div>
+        </div>
+        <div class="pin-row">
+          <span class="pin-num">10</span>
+          <span class="pin-name" style="color:var(--sage)">RX (UART)</span>
+          <div class="pin-wire">
+            <div class="wire-line wire-uart" style="height:2px;flex:1"></div>
+            <div class="wire-dot wire-uart"></div>
+          </div>
+        </div>
+        <div class="pin-row">
+          <span class="pin-num">15</span>
+          <span class="pin-name" style="color:#a0aec0">GPIO22</span>
+          <div class="pin-wire">
+            <div class="wire-line wire-gpio" style="height:2px;flex:1"></div>
+            <div class="wire-dot wire-gpio"></div>
+          </div>
+        </div>
+        <div class="pin-row">
+          <span class="pin-num">19</span>
+          <span class="pin-name" style="color:var(--rust-lt)">MOSI</span>
+          <div class="pin-wire">
+            <div class="wire-line wire-spi" style="height:2px;flex:1"></div>
+            <div class="wire-dot wire-spi"></div>
+          </div>
+        </div>
+        <div class="pin-row">
+          <span class="pin-num">21</span>
+          <span class="pin-name" style="color:var(--rust-lt)">MISO</span>
+          <div class="pin-wire">
+            <div class="wire-line wire-spi" style="height:2px;flex:1"></div>
+            <div class="wire-dot wire-spi"></div>
+          </div>
+        </div>
+        <div class="pin-row">
+          <span class="pin-num">23</span>
+          <span class="pin-name" style="color:var(--rust-lt)">SCLK</span>
+          <div class="pin-wire">
+            <div class="wire-line wire-spi" style="height:2px;flex:1"></div>
+            <div class="wire-dot wire-spi"></div>
+          </div>
+        </div>
+        <div class="pin-row">
+          <span class="pin-num">24</span>
+          <span class="pin-name" style="color:var(--rust-lt)">CE0</span>
+          <div class="pin-wire">
+            <div class="wire-line wire-spi" style="height:2px;flex:1"></div>
+            <div class="wire-dot wire-spi"></div>
+          </div>
+        </div>
+      </div>
 
+      <!-- Centre : nappe -->
+      <div class="nappe-center">
+        <div class="nappe-label">Nappe 26 fils</div>
+      </div>
+
+      <!-- Colonne droite : Shield -->
+      <div class="pin-col">
+        <div style="font-size:0.75rem;font-weight:500;color:var(--slate-lt);margin-bottom:4px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.08em">Shield</div>
+
+        <div class="pin-row">
+          <div class="wire-dot wire-power"></div>
+          <span class="shield-dest">SHT20 VCC</span>
+        </div>
+        <div class="pin-row">
+          <div class="wire-dot wire-i2c"></div>
+          <span class="shield-dest">SHT20 SDA</span>
+        </div>
+        <div class="pin-row">
+          <div class="wire-dot wire-i2c"></div>
+          <span class="shield-dest">SHT20 SCL</span>
+        </div>
+        <div class="pin-row">
+          <div class="wire-dot wire-gnd"></div>
+          <span class="shield-dest">SHT20 GND</span>
+        </div>
+        <div class="pin-row">
+          <div class="wire-dot wire-uart"></div>
+          <span class="shield-dest">MAX232 entrée</span>
+        </div>
+        <div class="pin-row">
+          <div class="wire-dot wire-uart"></div>
+          <span class="shield-dest">MAX232 sortie</span>
+        </div>
+        <div class="pin-row">
+          <div class="wire-dot wire-gpio"></div>
+          <span class="shield-dest">LED D1</span>
+        </div>
+        <div class="pin-row">
+          <div class="wire-dot wire-spi"></div>
+          <span class="shield-dest">TC72 SDI</span>
+        </div>
+        <div class="pin-row">
+          <div class="wire-dot wire-spi"></div>
+          <span class="shield-dest">TC72 SDO</span>
+        </div>
+        <div class="pin-row">
+          <div class="wire-dot wire-spi"></div>
+          <span class="shield-dest">TC72 CLK</span>
+        </div>
+        <div class="pin-row">
+          <div class="wire-dot wire-spi"></div>
+          <span class="shield-dest">TC72 CS</span>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- ══════════════════════════════════════════════════════ -->
-<!--                  SEMAINE 4 — LED                      -->
-<!-- ══════════════════════════════════════════════════════ -->
-<div class="section">
-  <h2>💡 Semaine 4 — Câblage LED <span class="semaine-badge">S4</span></h2>
-
-  <table class="cable-table">
-    <tr>
-      <th>Composant</th>
-      <th>Broche composant</th>
-      <th>Broche Raspberry</th>
-      <th>Numéro</th>
-      <th>Fil conseillé</th>
-      <th>Remarque</th>
-    </tr>
-    <tr>
-      <td>LED</td>
-      <td>Anode <b>(+, longue patte)</b></td>
-      <td>Via résistance 330Ω</td>
-      <td>—</td>
-      <td><span class="tag tag-r">Rouge</span></td>
-      <td>Toujours mettre la résistance côté anode</td>
-    </tr>
-    <tr>
-      <td>Résistance 330Ω</td>
-      <td>Une patte</td>
-      <td><span class="tag tag-o">GPIO22</span> — Broche 15</td>
-      <td>15</td>
-      <td><span class="tag tag-o">Orange</span></td>
-      <td>Bandes : orange-orange-marron-or</td>
-    </tr>
-    <tr>
-      <td>LED</td>
-      <td>Cathode <b>(−, courte patte)</b></td>
-      <td>GND</td>
-      <td>9</td>
-      <td><span class="tag tag-w">Noir</span></td>
-      <td>N'importe quelle broche GND</td>
-    </tr>
-  </table>
-
-  <div class="schema-box">
-    <span class="hl-gpio">Broche 15 (GPIO22)</span> ──── <span class="hl-res">[Résistance 330Ω]</span> ──── <span class="hl-led">Anode LED (+)</span><br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="hl-led">Cathode LED (−)</span> ──── <span class="hl-gnd">Broche 9 (GND)</span>
+  <!-- ══ VÉRIFICATIONS ══ -->
+  <h2 class="section-title"><span>✅</span> Vérifications après mise sous tension</h2>
+  <div class="verif-grid">
+    <div class="verif-card">
+      <div class="verif-icon">💛</div>
+      <div>
+        <div class="verif-title">LED jaune D2 allumée</div>
+        <div class="verif-desc">Confirme la présence du 3.3V sur le GPIO. Si éteinte → vérifier la nappe.</div>
+      </div>
+    </div>
+    <div class="verif-card">
+      <div class="verif-icon">⚡</div>
+      <div>
+        <div class="verif-title">Tensions MAX232</div>
+        <div class="verif-desc">Broche 2 (VS+) ≈ +9.1V<br>Broche 6 (VS−) ≈ −8.7V</div>
+      </div>
+    </div>
+    <div class="verif-card">
+      <div class="verif-icon">🔍</div>
+      <div>
+        <div class="verif-title">Détection I2C</div>
+        <div class="verif-desc">sudo i2cdetect -y 1<br>→ 0x40 (SHT20) + 4 adresses LCD</div>
+      </div>
+    </div>
+    <div class="verif-card">
+      <div class="verif-icon">🔌</div>
+      <div>
+        <div class="verif-title">Afficheur LCD branché</div>
+        <div class="verif-desc">Câble grove 5cm entre J4 et l'afficheur. Fournit les pull-up I2C.</div>
+      </div>
+    </div>
   </div>
 
-  <div class="info-box">
-    <b>Pourquoi une résistance ?</b><br>
-    La GPIO délivre <b>3.3V</b>. Une LED rouge consomme environ <b>2V</b> et supporte <b>20mA</b> max.<br>
-    Sans résistance, le courant serait illimité → la LED grille et la Raspberry peut être endommagée.<br><br>
-    <b>Calcul de la résistance (loi d'Ohm) :</b>
-    <div class="formula">R = (Vcc − Vled) / I = (3.3 − 2.0) / 0.020 = 65Ω minimum → on prend <b>330Ω</b> (valeur standard, sécurisée)</div>
-    Les bandes de couleur d'une résistance 330Ω : <b style="color:#ff9f43">Orange</b> – <b style="color:#ff9f43">Orange</b> – <b style="color:#a29bfe">Marron</b> – <b style="color:#ffe66d">Or</b>
+</div><!-- /container -->
+
+<!-- ══ MODALS ══ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeOnOverlay(event)">
+  <div class="modal" id="modalBox">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalContent"></div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════ -->
-<!--              SEMAINE 5 — SHT20 + LED                  -->
-<!-- ══════════════════════════════════════════════════════ -->
-<div class="section">
-  <h2>🌡️ Semaine 5 — Câblage SHT20 + LED <span class="semaine-badge">S5</span></h2>
-  <p style="font-size:13px;color:#aaa">Le câblage de la LED (S4) est conservé. On ajoute le capteur SHT20 sur le bus I2C.</p>
-
-  <table class="cable-table">
-    <tr>
-      <th>Composant</th>
-      <th>Broche composant</th>
-      <th>Broche Raspberry</th>
-      <th>Numéro</th>
-      <th>Fil conseillé</th>
-      <th>Remarque</th>
-    </tr>
-    <tr>
-      <td>SHT20</td>
-      <td>VCC</td>
-      <td>3.3V</td>
-      <td>1 ou 17</td>
-      <td><span class="tag tag-r">Rouge</span></td>
-      <td>Ne pas brancher sur 5V — le SHT20 supporte max 3.6V</td>
-    </tr>
-    <tr>
-      <td>SHT20</td>
-      <td>GND</td>
-      <td>GND</td>
-      <td>6</td>
-      <td><span class="tag tag-w">Noir</span></td>
-      <td>N'importe quelle broche GND</td>
-    </tr>
-    <tr>
-      <td>SHT20</td>
-      <td>SDA</td>
-      <td><span class="tag tag-y">GPIO2 / SDA</span></td>
-      <td>3</td>
-      <td><span class="tag tag-y">Jaune</span></td>
-      <td>Bus I2C — données. Adresse capteur : 0x40</td>
-    </tr>
-    <tr>
-      <td>SHT20</td>
-      <td>SCL</td>
-      <td><span class="tag tag-g">GPIO3 / SCL</span></td>
-      <td>5</td>
-      <td><span class="tag tag-g">Vert</span></td>
-      <td>Bus I2C — horloge</td>
-    </tr>
-    <tr>
-      <td>LED</td>
-      <td>Anode (+)</td>
-      <td>Via résistance 330Ω → GPIO22</td>
-      <td>15</td>
-      <td><span class="tag tag-r">Rouge</span></td>
-      <td>Identique S4</td>
-    </tr>
-    <tr>
-      <td>LED</td>
-      <td>Cathode (−)</td>
-      <td>GND</td>
-      <td>9</td>
-      <td><span class="tag tag-w">Noir</span></td>
-      <td>Identique S4</td>
-    </tr>
-  </table>
-
-  <div class="schema-box">
-    <b style="color:#ffe66d">── Bus I2C ──</b><br>
-    <span class="hl-sda">SHT20 SDA</span> ──────────────────── <span class="hl-sda">Broche 3 (GPIO2/SDA)</span><br>
-    <span class="hl-scl">SHT20 SCL</span> ──────────────────── <span class="hl-scl">Broche 5 (GPIO3/SCL)</span><br>
-    <span class="hl-vcc">SHT20 VCC</span> ──────────────────── <span class="hl-vcc">Broche 1 (3.3V)</span><br>
-    <span class="hl-gnd">SHT20 GND</span> ──────────────────── <span class="hl-gnd">Broche 6 (GND)</span><br><br>
-    <b style="color:#ff9f43">── LED (identique S4) ──</b><br>
-    <span class="hl-gpio">Broche 15 (GPIO22)</span> ── <span class="hl-res">[330Ω]</span> ── <span class="hl-led">Anode LED</span> · <span class="hl-led">Cathode LED</span> ── <span class="hl-gnd">Broche 9 (GND)</span>
+<footer>
+  <div class="container">
+    BTS CIEL · 2025/2026 · Shield pédagogique fait maison 🦝
   </div>
+</footer>
 
-  <div class="info-box">
-    <b>Vérifier que le capteur est bien détecté avant de lancer l'application :</b>
-    <div class="formula">sudo i2cdetect -y 1</div>
-    Le capteur SHT20 doit apparaître à l'adresse <b>0x40</b> dans la grille. Si rien n'apparaît : vérifier le câblage SDA/SCL et que I2C est activé dans <b>/boot/config.txt</b> (<code>dtparam=i2c_arm=on</code>).
-  </div>
-</div>
+<script>
+const data = {
+  sht20: {
+    ref: 'U1 · Composant CMS',
+    name: 'SHT20',
+    proto: 'i2c',
+    protoLabel: 'I2C · Adresse 0x40',
+    semaine: 'S5 et S6',
+    desc: `
+      <p>Le <strong>SHT20</strong> est le capteur principal du shield. Il mesure la <strong>température</strong> (−40°C à +125°C) et l'<strong>humidité relative</strong> (0 à 100%) en une seule puce CMS soudée directement sur le PCB.</p>
+      <p>Il communique via le bus <strong>I2C</strong> sur les broches SDA (broche 3) et SCL (broche 5) de la Raspberry. Son adresse fixe est <strong>0x40</strong>.</p>
+      <p>La lecture se fait en envoyant une commande (0xF3 pour la température, 0xF5 pour l'humidité), puis en attendant la mesure et en lisant 3 octets (2 de données + 1 CRC).</p>
+    `,
+    specs: [
+      ['Adresse I2C', '0x40'],
+      ['Cmd température', '0xF3'],
+      ['Cmd humidité', '0xF5'],
+      ['Temps mesure temp.', '85 ms max'],
+      ['Temps mesure humi.', '29 ms max'],
+      ['Formule temp.', '−46.85 + 175.72 × (raw/65536)'],
+    ],
+    cmd: `<span class="cmd-comment"># Vérifier la détection</span>
+sudo i2cdetect -y 1
+<span class="cmd-comment"># Lire le registre 0xE7 (vérification)</span>
+i2cget -y 1 0x40 0xE7 b`
+  },
 
-<!-- ══════════════════════════════════════════════════════ -->
-<!--            SEMAINE 6 — SHT20 + LED + TCP              -->
-<!-- ══════════════════════════════════════════════════════ -->
-<div class="section">
-  <h2>📡 Semaine 6 — Câblage SHT20 + LED + TCP <span class="semaine-badge">S6</span></h2>
-  <p style="font-size:13px;color:#aaa">Le câblage matériel est <b>identique à S5</b>. La nouveauté est purement logicielle (TCP via le réseau Wi-Fi ou Ethernet déjà présent).</p>
+  tc72: {
+    ref: 'U2 · Composant CMS',
+    name: 'TC72',
+    proto: 'spi',
+    protoLabel: 'SPI · MODE 1 · 5 MHz',
+    semaine: 'À venir',
+    desc: `
+      <p>Le <strong>TC72</strong> est un second capteur de température, communiquant cette fois via le bus <strong>SPI</strong>. Il offre une résolution de <strong>10 bits</strong>, soit une précision de 0,25°C par bit.</p>
+      <p>Le bus SPI utilise 4 fils : MOSI (données vers capteur), MISO (données vers Pi), SCLK (horloge) et CE0 (chip select). Le TC72 fonctionne en <strong>SPI MODE 1</strong> (horloge active sur front descendant, repos à l'état bas).</p>
+      <p>Un autre mode compatible est le <strong>MODE 3</strong>. La vitesse du bus est de 5 MHz.</p>
+    `,
+    specs: [
+      ['Mode SPI', 'MODE 1 (ou MODE 3)'],
+      ['Vitesse', '5 MHz'],
+      ['CS actif', 'Haut (csHigh = true)'],
+      ['Reg. température LSB', '0x01'],
+      ['Reg. température MSB', '0x02'],
+      ['Reg. ID fabricant', '0x03 → 0x54'],
+      ['Résolution', '0.25°C / bit (10 bits)'],
+    ],
+    cmd: `<span class="cmd-comment"># Vérifier que SPI est actif</span>
+ls /dev/spi*
+<span class="cmd-comment"># Doit afficher /dev/spidev0.0</span>`
+  },
 
-  <table class="cable-table">
-    <tr>
-      <th>Composant</th>
-      <th>Connexion</th>
-      <th>Remarque</th>
-    </tr>
-    <tr>
-      <td>SHT20</td>
-      <td>Identique S5 (SDA→3, SCL→5, VCC→1, GND→6)</td>
-      <td>Aucun changement</td>
-    </tr>
-    <tr>
-      <td>LED + résistance 330Ω</td>
-      <td>Identique S5 (GPIO22→résistance→LED→GND)</td>
-      <td>Aucun changement</td>
-    </tr>
-    <tr>
-      <td>Réseau TCP</td>
-      <td>Wi-Fi ou câble Ethernet de la Raspberry</td>
-      <td>Pas de branchement GPIO supplémentaire</td>
-    </tr>
-  </table>
+  max232: {
+    ref: 'U3 · Traversant sur support',
+    name: 'MAX232',
+    proto: 'uart',
+    protoLabel: 'UART → RS232',
+    semaine: 'S6',
+    desc: `
+      <p>Le <strong>MAX232</strong> est un convertisseur de niveaux électriques. La Raspberry génère des signaux UART en <strong>3.3V</strong>, mais le standard RS232 (port DB9) utilise des tensions de <strong>±12V</strong>.</p>
+      <p>Le MAX232 fait la conversion : il prend le signal UART 3.3V de la Raspberry et le transforme en signal RS232 ±12V pour le port DB9, et inversement pour la réception.</p>
+      <p>Il est placé sur <strong>support tulipe</strong> (traversant extractible) pour pouvoir être remplacé facilement en cas de fausse manipulation.</p>
+      <p>⚠️ Le MAX232 ne fonctionne pas correctement sous 3.3V — il est alimenté en 5V sur ce shield.</p>
+    `,
+    specs: [
+      ['Alimentation', '5V (sur ce shield)'],
+      ['Tension VS+', '≈ +9.1V (à vérifier)'],
+      ['Tension VS−', '≈ −8.7V (à vérifier)'],
+      ['Montage', 'Traversant sur support tulipe'],
+      ['Port lié', 'DB9 (J3)'],
+    ],
+    cmd: `<span class="cmd-comment"># Vérifier que l'UART est disponible</span>
+ls /dev/serial*
+<span class="cmd-comment"># Doit afficher /dev/serial0 → /dev/ttyAMA0</span>`
+  },
 
-  <div class="info-box">
-    <b>Trouver l'adresse IP de la Raspberry pour configurer l'IHM :</b>
-    <div class="formula">hostname -I</div>
-    Ex : <b>192.168.1.42</b> → c'est l'IP à entrer côté serveur si tu envoies vers un PC.<br>
-    Pour tester en local sur la Raspberry elle-même : utiliser <b>127.0.0.1</b> comme IP.
-  </div>
-</div>
+  db9: {
+    ref: 'J3 · Connecteur',
+    name: 'Port DB9',
+    proto: 'uart',
+    protoLabel: 'RS232 · Série',
+    semaine: 'S6',
+    desc: `
+      <p>Le <strong>port DB9</strong> est le connecteur trapézoïdal à 9 broches visible sur le shield. C'est le même type de connecteur que les <strong>câbles console Cisco</strong> (câble bleu).</p>
+      <p>Il reçoit le signal RS232 converti par le MAX232. Côté PC, on branche un câble DB9 mâle/femelle et on ouvre un terminal série comme <strong>PuTTY</strong> (Windows) ou <strong>minicom</strong> (Linux) pour recevoir les données.</p>
+      <p>Dans Qt, la communication se fait via <strong>QSerialPort</strong> sur le port <code>/dev/ttyAMA0</code>.</p>
+    `,
+    specs: [
+      ['Port Linux', '/dev/ttyAMA0'],
+      ['Baudrate par défaut', '9600 bps'],
+      ['Format', '8N1 (8 bits, No parity, 1 stop)'],
+      ['Câble compatible', 'DB9 mâle/femelle ou console Cisco'],
+      ['Logiciel PC', 'PuTTY / Hercules / minicom'],
+    ],
+    cmd: `<span class="cmd-comment"># Tester envoi RS232 depuis terminal</span>
+echo "test" > /dev/ttyAMA0
+<span class="cmd-comment"># Recevoir sur PC avec PuTTY</span>
+<span class="cmd-comment"># Serial · COM3 · 9600 · 8N1</span>`
+  },
 
-<!-- ══════════════════════════════════════════════════════ -->
-<!--               RÉCAPITULATIF GÉNÉRAL                   -->
-<!-- ══════════════════════════════════════════════════════ -->
-<div class="section">
-  <h2>📋 Récapitulatif général des connexions</h2>
+  lcd: {
+    ref: 'J4 · Connecteur Grove',
+    name: 'Afficheur LCD',
+    proto: 'i2c',
+    protoLabel: 'I2C · Grove',
+    semaine: 'Optionnel',
+    desc: `
+      <p>L'<strong>afficheur LCD I2C</strong> se connecte au shield via un <strong>câble grove de 5cm</strong> (plus compact que le câble livré de 20cm). Il utilise le même bus I2C que le SHT20.</p>
+      <p>Il occupe <strong>4 adresses I2C</strong> sur le bus (c'est pourquoi i2cdetect affiche 5 adresses au total : 1 pour le SHT20 + 4 pour le LCD).</p>
+      <p>⚠️ L'afficheur doit être connecté pour que les <strong>résistances pull-up I2C</strong> soient actives. Sans lui, le bus I2C peut ne pas fonctionner correctement et le SHT20 peut ne pas être détecté.</p>
+    `,
+    specs: [
+      ['Protocole', 'I2C'],
+      ['Nb adresses occupées', '4 adresses'],
+      ['Câble', 'Grove 5cm (recommandé)'],
+      ['Rôle pull-up', 'Fournit les résistances pull-up I2C'],
+    ],
+    cmd: `<span class="cmd-comment"># Les 5 adresses doivent apparaître</span>
+sudo i2cdetect -y 1
+<span class="cmd-comment"># 0x40 = SHT20 + 4 autres = LCD</span>`
+  },
 
-  <table class="cable-table">
-    <tr>
-      <th>Broche Raspberry</th>
-      <th>N°</th>
-      <th>Connecté à</th>
-      <th>Utilisé en</th>
-    </tr>
-    <tr>
-      <td style="color:#ff6b6b">3.3V</td>
-      <td>1</td>
-      <td>SHT20 VCC</td>
-      <td><span class="semaine-badge">S5</span> <span class="semaine-badge">S6</span></td>
-    </tr>
-    <tr>
-      <td style="color:#ffe66d">GPIO2 / SDA</td>
-      <td>3</td>
-      <td>SHT20 SDA</td>
-      <td><span class="semaine-badge">S5</span> <span class="semaine-badge">S6</span></td>
-    </tr>
-    <tr>
-      <td style="color:#4ecdc4">GPIO3 / SCL</td>
-      <td>5</td>
-      <td>SHT20 SCL</td>
-      <td><span class="semaine-badge">S5</span> <span class="semaine-badge">S6</span></td>
-    </tr>
-    <tr>
-      <td style="color:#aaa">GND</td>
-      <td>6</td>
-      <td>SHT20 GND</td>
-      <td><span class="semaine-badge">S5</span> <span class="semaine-badge">S6</span></td>
-    </tr>
-    <tr>
-      <td style="color:#ff9f43">GPIO22</td>
-      <td>15</td>
-      <td>Résistance 330Ω → Anode LED</td>
-      <td><span class="semaine-badge">S4</span> <span class="semaine-badge">S5</span> <span class="semaine-badge">S6</span></td>
-    </tr>
-    <tr>
-      <td style="color:#aaa">GND</td>
-      <td>9</td>
-      <td>Cathode LED</td>
-      <td><span class="semaine-badge">S4</span> <span class="semaine-badge">S5</span> <span class="semaine-badge">S6</span></td>
-    </tr>
-  </table>
-</div>
+  j1: {
+    ref: 'J1 · Connecteur nappe',
+    name: 'Connecteur GPIO',
+    proto: 'gpio',
+    protoLabel: 'Nappe 26 fils',
+    semaine: 'S4 et suivantes',
+    desc: `
+      <p>Le connecteur <strong>J1</strong> est l'interface entre le shield et la Raspberry Pi. Une <strong>nappe 26 fils</strong> relie les 26 premières broches du connecteur GPIO 40 broches de la Raspberry aux composants du shield.</p>
+      <p>⚠️ Le <strong>sens de branchement est crucial</strong> : le fil rouge de la nappe doit être côté <strong>broche 1 (3.3V)</strong> de la Raspberry, repérable par le carré sur le PCB. Brancher à l'envers peut alimenter des GPIO en 5V et détruire la Raspberry.</p>
+    `,
+    specs: [
+      ['Nb fils', '26'],
+      ['Broches utilisées', '1 à 26'],
+      ['Sens', 'Fil rouge → Broche 1 (3.3V)'],
+      ['Repère', 'Carré sur PCB = broche 1'],
+    ],
+    cmd: `<span class="cmd-comment"># Vérifier après connexion</span>
+<span class="cmd-comment"># LED D2 jaune doit s'allumer</span>
+sudo i2cdetect -y 1
+<span class="cmd-comment"># 0x40 doit apparaître</span>`
+  },
 
-<p style="text-align:center;color:#555;font-size:12px;margin-top:20px">BTS CIEL — 2025/2026</p>
+  sw1: {
+    ref: 'SW1',
+    name: 'Bouton poussoir',
+    proto: 'gpio',
+    protoLabel: 'GPIO Input',
+    semaine: 'Optionnel',
+    desc: `
+      <p>Le <strong>bouton SW1</strong> est un poussoir traversant (version APEM KSA long ou court). Il est connecté à une entrée GPIO de la Raspberry et permet de déclencher des actions depuis le matériel plutôt que depuis l'IHM.</p>
+      <p>En Qt, on peut détecter les changements d'état via la lecture périodique du GPIO ou via une interruption.</p>
+    `,
+    specs: [
+      ['Type', 'Poussoir traversant'],
+      ['Modèle', 'APEM POUSSOIR CI KSA'],
+      ['Protocole', 'GPIO Input'],
+    ],
+    cmd: `<span class="cmd-comment"># Lire l'état du bouton</span>
+cat /sys/class/gpio/gpioXX/value`
+  },
 
+  leds: {
+    ref: 'D1 · D2',
+    name: 'LEDs du shield',
+    proto: 'gpio',
+    protoLabel: 'GPIO22 / 3.3V',
+    semaine: 'S4 et suivantes',
+    desc: `
+      <p><strong>D1</strong> est la LED commandée par l'application Qt via <strong>GPIO22</strong> (broche 15). Elle s'allume selon les seuils de température définis dans l'IHM — orange en zone intermédiaire, rouge au-dessus du seuil max.</p>
+      <p><strong>D2</strong> est la LED jaune <strong>témoin de présence du 3.3V</strong>. Elle s'allume automatiquement dès que le shield est alimenté par le GPIO de la Raspberry. Si elle ne s'allume pas, la nappe n'est pas correctement branchée.</p>
+    `,
+    specs: [
+      ['D1 — broche', 'GPIO22 (broche 15)'],
+      ['D1 — commande', 'Application Qt (seuils temp.)'],
+      ['D2 — rôle', 'Témoin 3.3V (toujours allumée)'],
+      ['D2 — éteinte ?', 'Nappe mal branchée'],
+    ],
+    cmd: `<span class="cmd-comment"># Allumer D1 manuellement</span>
+echo "22" | sudo tee /sys/class/gpio/export
+echo "out" | sudo tee /sys/class/gpio/gpio22/direction
+echo "1" | sudo tee /sys/class/gpio/gpio22/value`
+  },
+
+  fu1: {
+    ref: 'FU1',
+    name: 'Fusible',
+    proto: 'power',
+    protoLabel: 'Protection alimentation',
+    semaine: 'Toujours actif',
+    desc: `
+      <p>Le <strong>fusible FU1</strong> protège l'alimentation de la carte contre les courts-circuits et les surintensités. Il peut être soudé côté TOP ou côté BOTTOM selon la configuration choisie à l'assemblage.</p>
+      <p>⚠️ Ses broches doivent être légèrement détordues avant soudure pour un bon contact. En cas de problème d'alimentation, vérifier l'intégrité du fusible au multimètre en mode continuité.</p>
+    `,
+    specs: [
+      ['Rôle', 'Protection court-circuit'],
+      ['Montage', 'Traversant (côté TOP ou BOTTOM)'],
+      ['Test', 'Multimètre en mode continuité'],
+    ],
+    cmd: `<span class="cmd-comment"># Pas de commande logicielle</span>
+<span class="cmd-comment"># Vérifier au multimètre si le shield</span>
+<span class="cmd-comment"># ne s'alimente pas (D2 éteinte)</span>`
+  }
+};
+
+const protoBadge = {
+  i2c:   '<span class="comp-badge badge-i2c">I2C</span>',
+  spi:   '<span class="comp-badge badge-spi">SPI</span>',
+  uart:  '<span class="comp-badge badge-uart">UART/RS232</span>',
+  gpio:  '<span class="comp-badge badge-gpio">GPIO</span>',
+  power: '<span class="comp-badge badge-power">Alimentation</span>',
+};
+
+function openModal(id) {
+  const d = data[id];
+  if (!d) return;
+
+  const specs = d.specs.map(([k,v]) =>
+    `<div class="modal-spec-row"><span class="spec-key">${k}</span><span class="spec-val">${v}</span></div>`
+  ).join('');
+
+  document.getElementById('modalContent').innerHTML = `
+    <div class="modal-ref">${d.ref}</div>
+    <div class="modal-title">${d.name}</div>
+    <div class="modal-proto">${protoBadge[d.proto] || ''} <small style="color:var(--slate-lt);font-size:0.78rem;font-family:'DM Mono',monospace">${d.protoLabel}</small></div>
+    <div class="modal-body">${d.desc}</div>
+    <div class="modal-specs">${specs}</div>
+    <div style="font-size:0.78rem;color:var(--slate-lt);margin-bottom:4px;font-family:'DM Mono',monospace">Commande de vérification :</div>
+    <div class="modal-cmd">${d.cmd}</div>
+    <div class="modal-semaine">● Utilisé en : ${d.semaine}</div>
+  `;
+
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function closeOnOverlay(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
 </body>
 </html>
