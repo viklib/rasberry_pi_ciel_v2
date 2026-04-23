@@ -134,7 +134,7 @@ int CGpio::lire()
 #endif
 }
 
-/*
+/*!
  * \brief Ecrit une valeur sur la broche
  */
 int CGpio::ecrire(int value)
