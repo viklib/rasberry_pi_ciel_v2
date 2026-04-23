@@ -1,4 +1,4 @@
-# Semaine 5 — Capteur I2C SHT20 et seuils de température
+# Semaine 5 — Capteur I2C SHT20 et seuils de température 🦝
 
 > Projet pédagogique | BTS CIEL | Qt / C++ / Raspberry Pi
 
@@ -414,4 +414,4 @@ Durant cette semaine, l'IA **Claude** (Anthropic) a été utilisée comme outil 
 
 ---
 
-*BTS CIEL — 2025/2026*
+*BTS CIEL — 2025/2026* 🦝
