@@ -4,7 +4,9 @@
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QTimer>
-#include <QTcpSocket>
+#include <QTcpSocket>       // Communication TCP
+#include <QSerialPort>      // Communication RS232 serie
+#include <QSerialPortInfo>  // Pour lister les ports series disponibles
 #include <QFile>
 #include <QTextStream>
 #include <QDateTime>
@@ -20,27 +22,36 @@ class CIhmAppS6;
  *        Reprise de S5, inchangee
  */
 enum EtatLed {
-    ETAT_ETEINT,         // Temperature en dessous du seuil Min → LED eteinte
-    ETAT_INTERMEDIAIRE,  // Temperature entre seuil Min et Max → LED orange
-    ETAT_MAX             // Temperature au dessus du seuil Max → LED rouge
+    ETAT_ETEINT,         // Temperature sous le seuil Min → LED eteinte
+    ETAT_INTERMEDIAIRE,  // Temperature entre Min et Max  → LED orange
+    ETAT_MAX             // Temperature au dessus du Max  → LED rouge
 };
 
 /*!
- * \brief Classe CIhmAppS6
+ * \brief Classe CIhmAppS6 — Semaine 6 version 2
  *
- *        Semaine 6 : reprise du projet S5 (capteur SHT20, seuils Min/Max,
- *        commande LED) avec ajout de la communication TCP et de la
- *        sauvegarde CSV horodatee.
+ *        Reprise complete de S5 (capteur SHT20, seuils Min/Max,
+ *        commande LED via GPIO) avec ajout de DEUX canaux
+ *        de communication simultanes :
  *
- *        Fonctionnement :
- *        - Toutes les 2 secondes, le capteur est lu
- *        - Les donnees sont envoyees via TCP si connecte
- *        - Les donnees sont ecrites dans un fichier CSV local
- *        - La LED est commandee selon les seuils Min/Max
+ *        1. TCP   : envoi vers un serveur reseau (QTcpSocket)
+ *        2. RS232 : envoi via le port serie DB9 du shield (QSerialPort)
  *
- *        Format trame (TCP et CSV) :
- *        datetime;temperature_c;humidite_pct;etat_led
- *        Exemple : 2024-01-15 14:32:05;24.5;58.2;NORMAL
+ *        Les deux canaux envoient la meme trame CSV a chaque acquisition.
+ *        Chaque canal est independant : on peut utiliser l'un, l'autre,
+ *        ou les deux en meme temps.
+ *
+ *        Toutes les donnees sont egalement sauvegardees dans un
+ *        fichier CSV local horodate sur la Raspberry.
+ *
+ *        Format trame :
+ *        date;heure;temperature_c;humidite_pct;etat_led
+ *        Exemple : 15/01/2026;14:32:05;24,5;58,2;NORMAL
+ *
+ *        Simulation Windows :
+ *        - TCP  : fonctionne avec 127.0.0.1 + ncat -l 12345
+ *        - RS232: utiliser un port COM virtuel (ex: COM3) ou un
+ *                 emulateur comme com0com sous Windows
  */
 class CIhmAppS6 : public QMainWindow
 {
@@ -51,34 +62,50 @@ public:
     ~CIhmAppS6();
 
 private slots:
-    // ── Capteur / GPIO (repris de S5) ──
+    // ── Capteur / GPIO (repris de S5) ──────────────────────
     void slotDemarrerArreter();
     void slotActiverGpio();
     void slotAcquisition();
     void slotErreurCapteur(QString msg);
     void slotErreurGpio(QString msg);
 
-    // ── Communication TCP ──
+    // ── Communication TCP ───────────────────────────────────
     void slotConnecter();
     void slotTcpConnecte();
     void slotTcpDeconnecte();
     void slotTcpErreur(QAbstractSocket::SocketError erreur);
 
+    // ── Communication RS232 ─────────────────────────────────
+    void slotOuvrirFermerSerie();
+    void slotScanPorts();
+    void slotErreurSerie(QSerialPort::SerialPortError erreur);
+
 private:
     Ui::CIhmAppS6 *ui;
-    CSht20        *m_capteur;      // Capteur SHT20 via I2C
-    CGpio         *m_gpio;         // LED via sysfs GPIO
-    QTimer        *m_timer;        // Timer acquisition 2s
-    QTcpSocket    *m_socket;       // Socket TCP client
-    QFile         *m_fichierCsv;   // Fichier CSV local
 
-    int m_nbTramesTcp;   // Compteur de trames envoyees via TCP
-    int m_nbLignesCsv;   // Compteur de lignes ecrites dans le CSV
+    // ── Objets metier ───────────────────────────────────────
+    CSht20        *m_capteur;     // Capteur SHT20 via I2C
+    CGpio         *m_gpio;        // LED via sysfs GPIO
+    QTimer        *m_timer;       // Timer acquisition 2s
 
-    // ── Methodes privees ──
+    // ── Canaux de communication ─────────────────────────────
+    QTcpSocket    *m_socket;      // Socket TCP client
+    QSerialPort   *m_serie;       // Port serie RS232
+
+    // ── Fichier CSV ─────────────────────────────────────────
+    QFile         *m_fichierCsv;  // Fichier CSV local horodate
+
+    // ── Compteurs d'envoi ───────────────────────────────────
+    int m_nbTramesTcp;    // Nombre de trames envoyees via TCP
+    int m_nbTramesSerie;  // Nombre de trames envoyees via RS232
+    int m_nbLignesCsv;    // Nombre de lignes ecrites dans le CSV
+
+    // ── Methodes privees ────────────────────────────────────
     void    majAffichageLed(EtatLed etat);
     void    majStatutTcp(bool connecte);
+    void    majStatutSerie(bool ouvert);
     void    initialiserCsv();
+    void    remplirBaudrates();
     void    envoyerDonnees(float temperature, float humidite, EtatLed etat);
     QString construireTrame(float temperature, float humidite, EtatLed etat);
     QString etatLedVersTexte(EtatLed etat);
