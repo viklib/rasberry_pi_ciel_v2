@@ -38,8 +38,8 @@ Le matériel utilisé à partir de la S4 est un **shield pédagogique fait maiso
 | S4 | [`Semaine_4`](../../tree/Semaine_4) | GPIO, commande LED via sysfs | ✅ Terminé |
 | S5 | [`Semaine_5`](../../tree/Semaine_5) | Capteur I2C SHT20, seuils Min/Max | ✅ Terminé |
 | S6 | [`Semaine_6`](../../tree/Semaine_6) | Communication TCP + RS232 + CSV | ✅ Terminé |
-| S7 | [`Semaine_7`](../../tree/Semaine_7) | Structuration logicielle | ✅ Terminé |
-| S8 | [`Semaine_8`](../../tree/Semaine_8) | Finalisation + Soutenance | ⏳ À venir |
+| S7 | Semaine_7 | Structuration logicielle | ✅ Terminé |
+| S8 | Semaine_8 | Finalisation + Soutenance | ⏳ À venir |
 
 ---
 
