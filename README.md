@@ -149,10 +149,10 @@ Le shield se connecte via une **nappe 26 fils** sur les broches 1 à 26 du conne
 RASPBERRY PI — Connecteur 40 broches         SHIELD (nappe 26 fils)
 ┌──────────────────────────────────────────────────────────────┐
 │                                                              │
-│  Broche  1  (3.3V)  ───────────────────────  SHT20 VCC      │
-│  Broche  3  (SDA)   ───────────────────────  SHT20 SDA      │  ← I2C
-│  Broche  5  (SCL)   ───────────────────────  SHT20 SCL      │  ← I2C
-│  Broche  6  (GND)   ───────────────────────  SHT20 GND      │
+│  Broche  1  (3.3V)  ───────────────────────  SHT20 VCC       │
+│  Broche  3  (SDA)   ───────────────────────  SHT20 SDA       │  ← I2C
+│  Broche  5  (SCL)   ───────────────────────  SHT20 SCL       │  ← I2C
+│  Broche  6  (GND)   ───────────────────────  SHT20 GND       │
 │                                                              │
 │  Broche  8  (TX)    ───────────────────────  MAX232 entrée   │  ← UART→RS232
 │  Broche 10  (RX)    ───────────────────────  MAX232 sortie   │  ← UART→RS232
